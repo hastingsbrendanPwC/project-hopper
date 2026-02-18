@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Project Hopper Value Tracking Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{--hologic-blue:#2B2967;--hologic-deep:#1B1E4B;--hologic-violet:#AF3DB2;--hologic-violet-light:#C76AC9;--hologic-violet-muted:rgba(175,61,178,0.12);--hologic-violet-glow:rgba(175,61,178,0.30);--bg:#F4F5F8;--card:#FFFFFF;--card-hover:#F8F6FC;--border:#E2E0ED;--border-strong:#D0CDE0;--accent:var(--hologic-violet);--accent-muted:var(--hologic-violet-muted);--accent-glow:var(--hologic-violet-glow);--green:#10B981;--green-muted:rgba(16,185,129,0.10);--amber:#F59E0B;--amber-muted:rgba(245,158,11,0.10);--rose:#EF4444;--rose-muted:rgba(239,68,68,0.10);--teal:#0EA5E9;--teal-muted:rgba(14,165,233,0.10);--text-primary:#1E1B4B;--text-secondary:#5B5880;--text-muted:#8E8AAE;--mono:'JetBrains Mono',monospace;--sans:'DM Sans',sans-serif}
+  body{min-height:100vh;background:var(--bg);color:var(--text-primary);font-family:var(--sans);padding:0;-webkit-font-smoothing:antialiased}
+  .topbar{background:linear-gradient(135deg,var(--hologic-deep) 0%,var(--hologic-blue) 60%,#3D2D7C 100%);padding:28px 32px 32px;color:#fff}.topbar-inner{max-width:1200px;margin:0 auto}.topbar-tag{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;font-family:var(--mono);margin-bottom:6px;opacity:0.65}.topbar h1{font-size:30px;font-weight:700;letter-spacing:-0.3px;margin-bottom:4px}.topbar-sub{font-size:13px;opacity:0.55}.topbar-row{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px}
+  .topbar-breadcrumb{display:flex;align-items:center;gap:8px;font-size:13px;opacity:0.7;margin-bottom:8px;flex-wrap:wrap}.topbar-breadcrumb a{color:#fff;text-decoration:none;opacity:0.7;transition:opacity 0.15s;cursor:pointer}.topbar-breadcrumb a:hover{opacity:1}.topbar-breadcrumb .sep{opacity:0.4}
+  .container{max-width:1200px;margin:0 auto;padding:28px 32px 48px}
+  .btn-add{padding:11px 24px;border-radius:10px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);color:#fff;cursor:pointer;font-size:13px;font-weight:700;font-family:var(--mono);letter-spacing:0.5px;display:flex;align-items:center;gap:8px;transition:background 0.15s,transform 0.15s}.btn-add:hover{background:rgba(255,255,255,0.25);transform:translateY(-1px)}.btn-add span{font-size:18px;line-height:1}
+  .stats-row{display:flex;gap:14px;margin-bottom:24px;flex-wrap:wrap;margin-top:-44px;position:relative;z-index:2}.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 22px;flex:1;min-width:150px;position:relative;overflow:hidden;box-shadow:0 2px 12px rgba(27,30,75,0.06)}.stat-card .glow{position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;opacity:0.08}.stat-label{font-size:10px;color:var(--text-muted);letter-spacing:1.2px;text-transform:uppercase;font-family:var(--mono);margin-bottom:6px}.stat-value{font-size:24px;font-weight:700;font-family:var(--mono);line-height:1.1;color:var(--hologic-blue)}.stat-sub{font-size:11px;color:var(--text-secondary);margin-top:5px}
+  .panel{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:24px;box-shadow:0 2px 12px rgba(27,30,75,0.06)}.panel-title{font-size:11px;color:var(--text-muted);letter-spacing:1.2px;text-transform:uppercase;font-family:var(--mono);margin-bottom:16px}
+  .charts-row{display:flex;gap:14px;margin-bottom:24px;flex-wrap:wrap}.chart-panel-bar{flex:2;min-width:300px}.chart-panel-donut{flex:1;min-width:220px;display:flex;flex-direction:column;align-items:center}.chart-panel-donut .panel-title{align-self:flex-start}
+  .legend{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap}.legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-secondary)}.legend-dot{width:8px;height:8px;border-radius:2px}
+  .donut-legend{display:flex;gap:20px;margin-top:14px}.donut-legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary)}.donut-legend-dot{width:10px;height:10px;border-radius:50%}
+  .progress-legend{display:flex;gap:16px;margin-bottom:12px;font-size:10px;font-family:var(--mono);color:var(--text-muted);letter-spacing:0.8px;text-transform:uppercase;padding-left:174px}.progress-legend-item{display:inline-flex;align-items:center;gap:4px}.progress-legend-dot{width:10px;height:10px;border-radius:2px;display:inline-block}
+  .progress-row{display:flex;align-items:center;gap:14px;margin-bottom:14px}.progress-row:last-child{margin-bottom:0}.progress-name{width:160px;font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.progress-track{flex:1;height:20px;background:var(--bg);border-radius:6px;overflow:hidden;position:relative}.progress-fill{position:absolute;top:0;left:0;height:100%;border-radius:6px;transition:width 0.4s}.progress-labels{width:180px;display:flex;gap:6px;font-size:10px;font-family:var(--mono);color:var(--text-secondary);justify-content:flex-end}.progress-labels span{min-width:55px;text-align:right}
+  .table-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(27,30,75,0.06);margin-bottom:24px}.table-header{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}.table-header-label{font-size:11px;color:var(--text-muted);letter-spacing:1.2px;text-transform:uppercase;font-family:var(--mono)}
+  .table-scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:900px}thead th{padding:12px 14px;font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;font-family:var(--mono);font-weight:500;border-bottom:1px solid var(--border);white-space:nowrap}thead th:first-child{text-align:left}thead th:not(:first-child){text-align:right}thead th.th-center{text-align:center}thead th.th-left{text-align:left}
+  tbody tr{transition:background 0.15s;border-bottom:1px solid var(--border)}tbody tr:last-child{border-bottom:none}tbody tr:hover{background:var(--card-hover)}tbody tr.clickable{cursor:pointer}tbody td{padding:12px 14px;font-size:13px}tbody td:not(:first-child){text-align:right}tbody td.td-center{text-align:center!important}tbody td.td-left{text-align:left!important}
+  .td-name{font-weight:600;white-space:nowrap}.td-name .dot{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:8px;vertical-align:middle}.td-name a{color:var(--hologic-blue);text-decoration:none;border-bottom:1px dashed var(--border-strong);transition:border-color 0.15s,color 0.15s}.td-name a:hover{color:var(--hologic-violet);border-bottom-color:var(--hologic-violet)}
+  .td-desc{font-size:11px;color:var(--text-muted);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.td-owner{font-size:12px;color:var(--text-secondary);white-space:nowrap}
+  .badge{display:inline-block;padding:3px 10px;border-radius:6px;font-size:10px;font-weight:600;font-family:var(--mono)}.badge-runrate{background:var(--accent-muted);color:var(--accent)}.badge-onetime{background:var(--teal-muted);color:var(--teal)}
+  .td-currency{font-family:var(--mono);font-weight:600;font-size:13px}.td-secondary{font-family:var(--mono);font-size:12px;color:var(--text-secondary)}.td-green{font-family:var(--mono);font-size:13px;color:var(--green);font-weight:600}.td-duration{font-family:var(--mono);font-size:12px;color:var(--text-secondary)}.td-muted{font-family:var(--mono);font-size:12px;color:var(--text-muted)}
+  .empty-row td{padding:40px;text-align:center!important;color:var(--text-muted);font-size:14px}.footer{margin-top:24px;text-align:center;font-size:11px;color:var(--text-muted);font-family:var(--mono)}
+  .rollup-row{background:var(--bg);font-weight:600}.rollup-row td{border-top:2px solid var(--border-strong)}
+  .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}.detail-meta{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}.meta-label{font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;font-family:var(--mono);margin-bottom:4px}.meta-value{font-size:15px;font-weight:600;color:var(--text-primary)}
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:24px}.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;box-shadow:0 2px 12px rgba(27,30,75,0.06);cursor:pointer}.kpi-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}.kpi-name{font-size:12px;color:var(--text-secondary);font-weight:500}.kpi-status{font-size:9px;font-family:var(--mono);font-weight:700;letter-spacing:0.8px;text-transform:uppercase;padding:2px 8px;border-radius:4px}.kpi-status-green{background:var(--green-muted);color:var(--green)}.kpi-status-amber{background:var(--amber-muted);color:var(--amber)}.kpi-status-red{background:var(--rose-muted);color:var(--rose)}.kpi-value{font-size:28px;font-weight:700;font-family:var(--mono);color:var(--hologic-blue);margin-bottom:6px}.kpi-target{font-size:11px;color:var(--text-muted);font-family:var(--mono)}.kpi-bar-track{width:100%;height:6px;background:var(--bg);border-radius:3px;margin-top:10px;overflow:hidden}.kpi-bar-fill{height:100%;border-radius:3px;transition:width 0.4s}
+  .notes-area{width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:14px;color:var(--text-primary);outline:none;resize:vertical;min-height:60px;transition:border-color 0.15s}.notes-area:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-muted)}
+  .notes-log{list-style:none;max-height:400px;overflow-y:auto}.notes-entry{padding:12px 0;border-bottom:1px solid var(--border)}.notes-entry:last-child{border-bottom:none}
+  .notes-entry-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}.notes-entry-date{font-size:11px;font-family:var(--mono);color:var(--hologic-violet);font-weight:600}.notes-entry-delete{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:2px 6px;border-radius:4px;transition:color 0.15s}.notes-entry-delete:hover{color:var(--rose)}
+  .notes-entry-text{font-size:14px;color:var(--text-primary);line-height:1.6;white-space:pre-wrap}
+  .notes-input-row{display:flex;gap:8px;margin-bottom:16px}
+  .risk-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;font-size:13px;font-weight:600}.risk-low{background:var(--green-muted);color:var(--green)}.risk-medium{background:var(--amber-muted);color:var(--amber)}.risk-high{background:var(--rose-muted);color:var(--rose)}.risk-dot{width:8px;height:8px;border-radius:50%}
+  .btn-sm{padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text-secondary);cursor:pointer;font-size:12px;font-family:var(--sans);font-weight:500;transition:all 0.15s}.btn-sm:hover{background:var(--card-hover);border-color:var(--border-strong)}
+  .btn-sm-primary{padding:8px 16px;border-radius:8px;border:none;background:linear-gradient(135deg,var(--hologic-violet),var(--hologic-violet-light));color:#fff;cursor:pointer;font-size:12px;font-family:var(--sans);font-weight:600;box-shadow:0 2px 10px var(--accent-glow);transition:transform 0.15s}.btn-sm-primary:hover{transform:translateY(-1px)}
+  .modal-overlay{position:fixed;inset:0;background:rgba(27,30,75,0.55);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity 0.2s}.modal-overlay.active{opacity:1;pointer-events:auto}
+  .modal{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:32px;width:520px;max-width:92vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 60px rgba(27,30,75,0.25);transform:translateY(12px);transition:transform 0.2s}.modal-overlay.active .modal{transform:translateY(0)}.modal.wide{width:640px}
+  .modal h3{margin-bottom:24px;font-size:20px;font-weight:600;color:var(--hologic-blue)}.field{margin-bottom:14px}.field-label{display:block;font-size:11px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;font-family:var(--mono);margin-bottom:5px}
+  .field-input,.field-textarea,.field-select{width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:14px;font-family:var(--sans);outline:none;transition:border-color 0.15s}.field-input:focus,.field-textarea:focus,.field-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-muted)}.field-textarea{resize:vertical;min-height:56px}.field-select{cursor:pointer;appearance:auto}
+  .field-currency-wrap{position:relative}.field-currency-wrap .currency-symbol{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:14px;font-family:var(--mono);pointer-events:none}.field-currency-wrap .field-input{padding-left:28px}
+  .type-btns{display:flex;gap:8px;flex-wrap:wrap}.type-btn{flex:1;padding:10px 0;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--mono);transition:all 0.2s;border:1px solid var(--border);background:transparent;color:var(--text-secondary);min-width:70px}.type-btn.active{border-color:var(--accent);background:var(--accent-muted);color:var(--accent)}
+  .field-row{display:flex;gap:12px}.field-row .field{flex:1}
+  .modal-actions{display:flex;gap:10px;margin-top:24px}.btn-delete{padding:10px 18px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--rose);cursor:pointer;font-size:13px;font-family:var(--sans);font-weight:500}.btn-cancel{padding:10px 20px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;font-size:13px;font-family:var(--sans)}.btn-save{padding:10px 24px;border-radius:8px;border:none;background:linear-gradient(135deg,var(--hologic-violet),var(--hologic-violet-light));color:#fff;cursor:pointer;font-size:13px;font-weight:700;font-family:var(--sans);box-shadow:0 4px 16px var(--accent-glow)}.spacer{flex:1}
+  .badge-status{display:inline-block;padding:3px 10px;border-radius:6px;font-size:10px;font-weight:600;font-family:var(--mono);white-space:nowrap}.badge-not-started{background:var(--bg);color:var(--text-muted);border:1px solid var(--border)}.badge-on-track{background:var(--green-muted);color:var(--green)}.badge-at-risk{background:var(--rose-muted);color:var(--rose)}.badge-completed{background:rgba(43,41,103,0.08);color:var(--hologic-blue)}
+  .init-count{display:inline-flex;align-items:center;justify-content:center;background:var(--accent-muted);color:var(--accent);font-size:10px;font-weight:700;font-family:var(--mono);border-radius:10px;padding:1px 7px;margin-left:6px}
+  .loading-overlay{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2000;gap:16px}.loading-spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--hologic-violet);border-radius:50%;animation:spin 0.8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.loading-text{font-size:14px;color:var(--text-secondary);font-family:var(--mono)}
+  .toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-size:13px;font-family:var(--sans);font-weight:500;z-index:3000;opacity:0;transform:translateY(10px);transition:all 0.3s;pointer-events:none}.toast.show{opacity:1;transform:translateY(0)}.toast-success{background:var(--green);color:#fff}.toast-error{background:var(--rose);color:#fff}
+  /* GL */
+  .gl-table{width:100%;border-collapse:collapse;min-width:auto}.gl-table thead th{padding:10px 12px;font-size:9px}.gl-table tbody td{padding:10px 12px;font-size:12px}.gl-table tbody tr{cursor:pointer}
+  .gl-variance-pos{color:var(--green);font-weight:600;font-family:var(--mono);font-size:12px}.gl-variance-neg{color:var(--rose);font-weight:600;font-family:var(--mono);font-size:12px}.gl-variance-zero{color:var(--text-muted);font-family:var(--mono);font-size:12px}
+  .gl-summary{display:flex;gap:20px;padding:14px 0;border-top:2px solid var(--border-strong);margin-top:8px;font-size:12px;flex-wrap:wrap}.gl-summary-item{display:flex;flex-direction:column;gap:2px}.gl-summary-label{font-size:9px;color:var(--text-muted);font-family:var(--mono);letter-spacing:0.8px;text-transform:uppercase}.gl-summary-value{font-size:16px;font-weight:700;font-family:var(--mono);color:var(--hologic-blue)}
+  .gl-reconcile-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;font-family:var(--mono)}.gl-matched{background:var(--green-muted);color:var(--green)}.gl-unmatched{background:var(--rose-muted);color:var(--rose)}.gl-partial{background:var(--amber-muted);color:var(--amber)}
+  .file-drop{border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;color:var(--text-muted);font-size:13px;cursor:pointer;transition:border-color 0.2s,background 0.2s}.file-drop:hover,.file-drop.dragover{border-color:var(--hologic-violet);background:var(--hologic-violet-muted)}.file-drop input{display:none}
+  /* Workplan */
+  .wp-init-header{background:var(--bg);padding:10px 14px;font-size:12px;font-weight:600;color:var(--hologic-blue);border-bottom:1px solid var(--border)}
+  .wp-milestone-row{background:rgba(43,41,103,0.03)}.wp-milestone-row td{font-weight:600}
+  .wp-task-row td:first-child{padding-left:40px!important}
+  .bu-tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:600;font-family:var(--mono);margin:1px 2px;background:var(--bg);color:var(--text-secondary);border:1px solid var(--border)}
+  .multi-check{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}.multi-check label{display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;padding:6px 12px;border:1px solid var(--border);border-radius:8px;transition:all 0.15s}.multi-check label:has(input:checked){border-color:var(--accent);background:var(--accent-muted);color:var(--accent)}.multi-check input{display:none}
+  @media(max-width:700px){.stats-row,.charts-row{flex-direction:column;display:flex}.detail-grid{grid-template-columns:1fr}.topbar-row{flex-direction:column;align-items:flex-start}.topbar{padding:20px 16px 32px}.container{padding:28px 16px 48px}.kpi-grid{grid-template-columns:1fr}.progress-legend{padding-left:0}}
+</style>
+</head>
+<body>
+<div class="loading-overlay" id="loading"><div class="loading-spinner"></div><div class="loading-text">Loading dashboard…</div></div>
+<div class="toast" id="toast"></div>
+<div id="topbar-mount"></div>
+<div class="container" id="app-container"></div>
+
+<!-- Workstream Modal -->
+<div class="modal-overlay" id="ws-modal" onclick="if(event.target===this)this.classList.remove('active')"><div class="modal" onclick="event.stopPropagation()">
+  <h3 id="ws-modal-title">Add Workstream</h3>
+  <div class="field"><label class="field-label">Workstream Name</label><input class="field-input" id="wf-name" placeholder="e.g. Process Automation" /></div>
+  <div class="field"><label class="field-label">Description</label><textarea class="field-textarea" id="wf-desc" placeholder="Brief description…"></textarea></div>
+  <div class="field"><label class="field-label">Owner</label><input class="field-input" id="wf-owner" placeholder="e.g. Jane Smith" /></div>
+  <div class="modal-actions"><button class="btn-delete" id="ws-btn-del" onclick="deleteWs()">Delete</button><div class="spacer"></div><button class="btn-cancel" onclick="$('ws-modal').classList.remove('active')">Cancel</button><button class="btn-save" id="ws-btn-save" onclick="saveWs()">Save</button></div>
+</div></div>
+
+<!-- Initiative Modal -->
+<div class="modal-overlay" id="init-modal" onclick="if(event.target===this)this.classList.remove('active')"><div class="modal" onclick="event.stopPropagation()">
+  <h3 id="init-modal-title">Add Initiative</h3>
+  <div class="field"><label class="field-label">Initiative Name</label><input class="field-input" id="if-name" /></div>
+  <div class="field"><label class="field-label">Description</label><textarea class="field-textarea" id="if-desc"></textarea></div>
+  <div class="field"><label class="field-label">Savings Type</label><div class="type-btns"><button class="type-btn" id="btn-onetime" onclick="setType('One-Time')">One-Time</button><button class="type-btn" id="btn-runrate" onclick="setType('Run-Rate')">Run-Rate</button></div></div>
+  <div class="field"><label class="field-label">Status</label><select class="field-select" id="if-status"><option value="Not Started">Not Started</option><option value="On-Track">On-Track</option><option value="At-Risk">At-Risk</option><option value="Completed">Completed</option></select></div>
+  <div class="field-row"><div class="field"><label class="field-label">Target Savings</label><div class="field-currency-wrap"><span class="currency-symbol">$</span><input class="field-input" id="if-target" type="number" min="0" /></div></div><div class="field"><label class="field-label">Savings Identified</label><div class="field-currency-wrap"><span class="currency-symbol">$</span><input class="field-input" id="if-identified" type="number" min="0" /></div></div></div>
+  <div class="field-row"><div class="field"><label class="field-label">Actioned</label><div class="field-currency-wrap"><span class="currency-symbol">$</span><input class="field-input" id="if-action" type="number" min="0" /></div></div><div class="field"><label class="field-label">Savings Achieved</label><div class="field-currency-wrap"><span class="currency-symbol">$</span><input class="field-input" id="if-achieved" type="number" min="0" /></div></div></div>
+  <div class="field"><label class="field-label">Duration (months)</label><input class="field-input" id="if-duration" type="number" min="1" /></div>
+  <div class="modal-actions"><button class="btn-delete" id="init-btn-del" onclick="deleteInit()">Delete</button><div class="spacer"></div><button class="btn-cancel" onclick="$('init-modal').classList.remove('active')">Cancel</button><button class="btn-save" id="init-btn-save" onclick="saveInit()">Save</button></div>
+</div></div>
+
+<!-- KPI Modal -->
+<div class="modal-overlay" id="kpi-modal" onclick="if(event.target===this)this.classList.remove('active')"><div class="modal" onclick="event.stopPropagation()">
+  <h3 id="kpi-modal-title">Add KPI</h3>
+  <div class="field"><label class="field-label">KPI Name</label><input class="field-input" id="kf-name" /></div>
+  <div class="field-row"><div class="field"><label class="field-label">Current Value</label><input class="field-input" id="kf-value" /></div><div class="field"><label class="field-label">Target Value</label><input class="field-input" id="kf-target" /></div></div>
+  <div class="field"><label class="field-label">Unit</label><input class="field-input" id="kf-unit" /></div>
+  <div class="field"><label class="field-label">Status</label><select class="field-select" id="kf-status"><option value="green">On Track</option><option value="amber">At Risk</option><option value="red">Off Track</option></select></div>
+  <div class="modal-actions"><button class="btn-delete" id="kpi-btn-del" onclick="deleteKpi()">Delete</button><div class="spacer"></div><button class="btn-cancel" onclick="$('kpi-modal').classList.remove('active')">Cancel</button><button class="btn-sm-primary" onclick="saveKpi()">Save KPI</button></div>
+</div></div>
+
+<!-- GL Modal -->
+<div class="modal-overlay" id="gl-modal" onclick="if(event.target===this)this.classList.remove('active')"><div class="modal" onclick="event.stopPropagation()">
+  <h3 id="gl-modal-title">Add GL Line Item</h3>
+  <div class="field"><label class="field-label">GL Account Code</label><input class="field-input" id="gf-account" /></div>
+  <div class="field"><label class="field-label">Cost Center / Department</label><input class="field-input" id="gf-costcenter" /></div>
+  <div class="field"><label class="field-label">Description</label><input class="field-input" id="gf-desc" /></div>
+  <div class="field-row"><div class="field"><label class="field-label">Baseline Period Amount</label><div class="field-currency-wrap"><span class="currency-symbol">$</span><input class="field-input" id="gf-baseline" type="number" min="0" /></div></div><div class="field"><label class="field-label">Current Period Amount</label><div class="field-currency-wrap"><span class="currency-symbol">$</span><input class="field-input" id="gf-current" type="number" min="0" /></div></div></div>
+  <div class="modal-actions"><button class="btn-delete" id="gl-btn-del" onclick="deleteGl()">Delete</button><div class="spacer"></div><button class="btn-cancel" onclick="$('gl-modal').classList.remove('active')">Cancel</button><button class="btn-save" onclick="saveGl()">Save</button></div>
+</div></div>
+
+<!-- Workplan Modal -->
+<div class="modal-overlay" id="wp-modal" onclick="if(event.target===this)this.classList.remove('active')"><div class="modal wide" onclick="event.stopPropagation()">
+  <h3 id="wp-modal-title">Add Workplan Item</h3>
+  <div class="field-row"><div class="field"><label class="field-label">Workplan Level</label><div class="type-btns"><button class="type-btn" id="wp-btn-milestone" onclick="setWpLevel('Milestone')">Milestone</button><button class="type-btn" id="wp-btn-task" onclick="setWpLevel('Task')">Task</button></div></div>
+    <div class="field" id="wp-parent-field" style="display:none"><label class="field-label">Parent Milestone</label><select class="field-select" id="wpf-parent"></select></div></div>
+  <div class="field"><label class="field-label">Name</label><input class="field-input" id="wpf-name" /></div>
+  <div class="field"><label class="field-label">Initiative</label><select class="field-select" id="wpf-init"></select></div>
+  <div class="field"><label class="field-label">Owner</label><input class="field-input" id="wpf-owner" /></div>
+  <div class="field"><label class="field-label">Status</label><select class="field-select" id="wpf-status"><option value="Not Started">Not Started</option><option value="On-Track">On-Track</option><option value="At-Risk">At-Risk</option><option value="Completed">Completed</option></select></div>
+  <div class="field-row"><div class="field"><label class="field-label">Start Date</label><input class="field-input" id="wpf-start" type="date" /></div><div class="field"><label class="field-label">End Date</label><input class="field-input" id="wpf-end" type="date" /></div></div>
+  <div class="field"><label class="field-label">Impacted BUs</label><div class="multi-check" id="wpf-bus">
+    <label><input type="checkbox" value="Corporate" />Corporate</label>
+    <label><input type="checkbox" value="Diagnostics" />Diagnostics</label>
+    <label><input type="checkbox" value="Breast Health" />Breast Health</label>
+    <label><input type="checkbox" value="GYN Surgical" />GYN Surgical</label>
+  </div></div>
+  <div class="field"><label class="field-label">Dependency Responding Team</label><select class="field-select" id="wpf-dep"><option value="">— None —</option></select></div>
+  <div class="field"><label class="field-label">Comments / Notes</label><textarea class="field-textarea" id="wpf-comments"></textarea></div>
+  <div class="modal-actions"><button class="btn-delete" id="wp-btn-del" onclick="deleteWp()">Delete</button><div class="spacer"></div><button class="btn-cancel" onclick="$('wp-modal').classList.remove('active')">Cancel</button><button class="btn-save" id="wp-btn-save" onclick="saveWp()">Save</button></div>
+</div></div>
+
+<script>
+const COLORS=['#AF3DB2','#2B2967','#0EA5E9','#10B981','#F59E0B','#EF4444','#8B5CF6','#EC4899'];
+const $=id=>document.getElementById(id);
+const BU_OPTIONS=['Corporate','Diagnostics','Breast Health','GYN Surgical'];
+
+let workstreams=[
+  {id:1,name:'Process Automation',desc:'Automate manual reporting and data entry across finance ops',owner:'Sarah Chen',risk:'medium',notes:[{id:1,text:'Finance team has been very engaged. Need to align with IT on infrastructure timeline for Phase 2.',date:'2025-11-15T14:30:00'},{id:2,text:'Kicked off bot development sprint with the dev team. UAT timeline may shift by 2 weeks.',date:'2026-01-08T09:15:00'}]},
+  {id:2,name:'Vendor Consolidation',desc:'Consolidate overlapping SaaS tools and negotiate volume discounts',owner:'Mike Torres',risk:'low',notes:[{id:1,text:'Project completed successfully. All savings captured and validated against GL.',date:'2025-09-20T16:00:00'}]},
+  {id:3,name:'Cloud Migration',desc:'Migrate on-prem infrastructure to reduce hosting and maintenance costs',owner:'Priya Patel',risk:'high',notes:[{id:1,text:'Two incidents during wave 1 prep have raised concerns. Working with cloud vendor on SLA guarantees.',date:'2025-10-05T11:00:00'},{id:2,text:'Budget revision submitted to steering committee. Awaiting approval.',date:'2026-02-01T10:30:00'}]},
+  {id:4,name:'Workforce Optimization',desc:'Restructure teams for efficiency gains post-merger',owner:'David Kim',risk:'medium',notes:[{id:1,text:'HR and legal review in progress for restructure plan.',date:'2025-12-10T13:45:00'}]},
+];
+let allInits=[
+  {id:101,wsId:1,name:'AP Invoice Automation',desc:'Automate accounts payable invoice processing',type:'Run-Rate',status:'On-Track',target:250000,identified:220000,action:175000,achieved:140000,duration:18,notes:[{id:1,text:'Initial vendor demos completed. Selecting between UiPath and Automation Anywhere.',date:'2025-08-15T10:00:00'}]},
+  {id:102,wsId:1,name:'Report Generation Bot',desc:'Build RPA bots for monthly financial reports',type:'Run-Rate',status:'On-Track',target:200000,identified:160000,action:120000,achieved:80000,duration:12,notes:[]},
+  {id:201,wsId:2,name:'SaaS Tool Rationalization',desc:'Eliminate redundant SaaS subscriptions',type:'One-Time',status:'Completed',target:180000,identified:180000,action:180000,achieved:180000,duration:6,notes:[{id:1,text:'All redundant licenses terminated. Final savings confirmed.',date:'2025-07-01T14:00:00'}]},
+  {id:202,wsId:2,name:'Volume Discount Negotiation',desc:'Renegotiate enterprise pricing',type:'One-Time',status:'Completed',target:100000,identified:100000,action:100000,achieved:100000,duration:4,notes:[]},
+  {id:301,wsId:3,name:'Dev/Test Cloud Migration',desc:'Migrate non-production environments',type:'Run-Rate',status:'On-Track',target:220000,identified:200000,action:130000,achieved:100000,duration:12,notes:[]},
+  {id:302,wsId:3,name:'Production Workload Migration',desc:'Migrate production servers',type:'Run-Rate',status:'At-Risk',target:300000,identified:250000,action:80000,achieved:50000,duration:24,notes:[{id:1,text:'Two downtime incidents flagged. Escalating to cloud vendor.',date:'2026-01-20T09:30:00'}]},
+  {id:303,wsId:3,name:'On-Prem Decommission',desc:'Decommission legacy hardware',type:'One-Time',status:'Not Started',target:100000,identified:60000,action:0,achieved:0,duration:6,notes:[]},
+  {id:401,wsId:4,name:'Shared Services Model',desc:'Create shared services center',type:'Run-Rate',status:'On-Track',target:340000,identified:200000,action:110000,achieved:80000,duration:12,notes:[]},
+];
+let allKpis=[
+  {id:1,wsId:1,name:'FTE Hours Saved',value:'320',target:'500',unit:'hrs/mo',status:'green'},
+  {id:2,wsId:1,name:'Reports Automated',value:'14',target:'22',unit:'reports',status:'amber'},
+  {id:3,wsId:2,name:'Vendors Reduced',value:'12',target:'12',unit:'vendors',status:'green'},
+  {id:4,wsId:3,name:'Servers Migrated',value:'38',target:'120',unit:'servers',status:'amber'},
+  {id:5,wsId:3,name:'Downtime Incidents',value:'2',target:'0',unit:'incidents',status:'red'},
+  {id:6,wsId:4,name:'Roles Consolidated',value:'8',target:'15',unit:'roles',status:'amber'},
+];
+let allGl=[
+  {id:1,initId:101,account:'6100-200',costCenter:'FIN-OPS-001',desc:'Manual data entry labor',baseline:145000,current:72000},
+  {id:2,initId:101,account:'6100-205',costCenter:'FIN-OPS-001',desc:'Invoice processing overhead',baseline:105000,current:37000},
+  {id:3,initId:201,account:'7200-100',costCenter:'IT-001',desc:'Redundant SaaS licenses',baseline:180000,current:0},
+];
+// Workplan items: milestones and tasks
+let allWp=[
+  {id:1,initId:101,wsId:1,level:'Milestone',parentId:null,name:'Process Mapping Complete',owner:'Sarah Chen',status:'Completed',start:'2025-01-15',end:'2025-03-15',bus:['Corporate','Diagnostics'],dep:'',comments:'All processes documented.'},
+  {id:2,initId:101,wsId:1,level:'Task',parentId:1,name:'Document current AP workflow',owner:'Lisa Park',status:'Completed',start:'2025-01-15',end:'2025-02-01',bus:['Corporate'],dep:'',comments:''},
+  {id:3,initId:101,wsId:1,level:'Task',parentId:1,name:'Identify automation opportunities',owner:'Sarah Chen',status:'Completed',start:'2025-02-01',end:'2025-03-15',bus:['Corporate','Diagnostics'],dep:'',comments:''},
+  {id:4,initId:101,wsId:1,level:'Milestone',parentId:null,name:'Bot Development Phase 1',owner:'Sarah Chen',status:'On-Track',start:'2025-03-15',end:'2025-06-01',bus:['Corporate'],dep:'Cloud Migration',comments:'Dependency on cloud infra.'},
+  {id:5,initId:101,wsId:1,level:'Task',parentId:4,name:'Build invoice parsing bot',owner:'Dev Team',status:'On-Track',start:'2025-03-15',end:'2025-05-01',bus:['Corporate'],dep:'',comments:''},
+  {id:6,initId:101,wsId:1,level:'Task',parentId:4,name:'UAT testing',owner:'Lisa Park',status:'Not Started',start:'2025-05-01',end:'2025-06-01',bus:['Corporate','Diagnostics'],dep:'',comments:''},
+  {id:7,initId:301,wsId:3,level:'Milestone',parentId:null,name:'Cloud Architecture Design',owner:'Priya Patel',status:'Completed',start:'2025-01-01',end:'2025-01-30',bus:['Corporate','Diagnostics','Breast Health','GYN Surgical'],dep:'',comments:'Approved by CTO.'},
+  {id:8,initId:301,wsId:3,level:'Milestone',parentId:null,name:'Dev/Test Migration',owner:'Priya Patel',status:'On-Track',start:'2025-02-01',end:'2025-05-15',bus:['Corporate'],dep:'',comments:''},
+  {id:9,initId:301,wsId:3,level:'Task',parentId:8,name:'Provision AWS accounts',owner:'Cloud Team',status:'Completed',start:'2025-02-01',end:'2025-02-15',bus:['Corporate'],dep:'',comments:''},
+  {id:10,initId:301,wsId:3,level:'Task',parentId:8,name:'Migrate dev workloads',owner:'Cloud Team',status:'On-Track',start:'2025-02-15',end:'2025-04-30',bus:['Corporate','Diagnostics'],dep:'',comments:''},
+];
+
+let nextWsId=5,nextInitId=500,nextKpiId=100,nextGlId=100,nextWpId=100;
+let currentView='dashboard',currentWsId=null;
+let editWsId=null,editInitWsId=null,editInitId=null,editKpiWsId=null,editKpiId=null;
+let editGlInitId=null,editGlId=null;
+let editWpWsId=null,editWpId=null,wpLevel='Milestone';
+let formType='Run-Rate';
+
+function wsInits(id){return allInits.filter(i=>i.wsId===id);}
+function wsKpis(id){return allKpis.filter(k=>k.wsId===id);}
+function initGl(id){return allGl.filter(g=>g.initId===id);}
+function wsWp(id){return allWp.filter(w=>w.wsId===id);}
+function initWp(id){return allWp.filter(w=>w.initId===id);}
+function wpChildren(parentId){return allWp.filter(w=>w.parentId===parentId);}
+function toast(msg,type='success'){const t=$('toast');t.textContent=msg;t.className=`toast toast-${type} show`;setTimeout(()=>t.classList.remove('show'),3000);}
+
+// ═══ HELPERS ═══════════════════════════════════════════
+function fmt(v){if(v>=1e6)return '$'+(v/1e6).toFixed(1)+'M';if(v>=1e3)return '$'+(v/1e3).toFixed(0)+'K';return '$'+v.toLocaleString();}
+function fmtFull(v){return '$'+v.toLocaleString();}
+function trunc(s,n){return s.length>n?s.slice(0,n)+'…':s;}
+function pctOf(a,b){return b>0?Math.round((a/b)*100)+'%':'0%';}
+
+function wsRollup(w){const inits=wsInits(w.id);return{target:inits.reduce((s,i)=>s+i.target,0),identified:inits.reduce((s,i)=>s+i.identified,0),achieved:inits.reduce((s,i)=>s+i.achieved,0),action:inits.reduce((s,i)=>s+(i.action||0),0),duration:inits.length?Math.max(...inits.map(i=>i.duration)):0,hasRunRate:inits.some(i=>i.type==='Run-Rate'),hasOneTime:inits.some(i=>i.type==='One-Time'),runRateAchieved:inits.filter(i=>i.type==='Run-Rate').reduce((s,i)=>s+i.achieved,0),oneTimeAchieved:inits.filter(i=>i.type==='One-Time').reduce((s,i)=>s+i.achieved,0),count:inits.length};}
+function allRollup(){let t=0,i2=0,a=0,ac=0,rA=0,oA=0,rC=0,oC=0;workstreams.forEach(w=>{const r=wsRollup(w);t+=r.target;i2+=r.identified;a+=r.achieved;ac+=r.action;rA+=r.runRateAchieved;oA+=r.oneTimeAchieved;wsInits(w.id).forEach(i=>{if(i.type==='Run-Rate')rC++;else oC++;});});return{target:t,identified:i2,achieved:a,actioned:ac,rrAchieved:rA,otAchieved:oA,rrCount:rC,otCount:oC};}
+function wsStatus(w){const inits=wsInits(w.id);if(!inits.length)return 'Not Started';if(inits.every(i=>i.status==='Completed'))return 'Completed';if(inits.some(i=>i.status==='At-Risk'))return 'At-Risk';if(inits.some(i=>i.status==='On-Track'))return 'On-Track';return 'Not Started';}
+// Milestone status rolls up from tasks
+function milestoneRollupStatus(msId){const tasks=wpChildren(msId);if(!tasks.length)return null;if(tasks.every(t=>t.status==='Completed'))return 'Completed';if(tasks.some(t=>t.status==='At-Risk'))return 'At-Risk';if(tasks.some(t=>t.status==='On-Track'))return 'On-Track';return 'Not Started';}
+function statusBadgeClass(s){return s==='On-Track'?'badge-on-track':s==='At-Risk'?'badge-at-risk':s==='Completed'?'badge-completed':'badge-not-started';}
+function sc(i,l,v,s,c){return `<div class="stat-card"><div class="glow" style="background:${c}"></div><div class="stat-label">${i} ${l}</div><div class="stat-value">${v}</div><div class="stat-sub">${s}</div></div>`;}
+function buTags(bus){return (bus||[]).map(b=>`<span class="bu-tag">${b}</span>`).join('');}
+function glSummary(initId){const items=initGl(initId);return{baseline:items.reduce((s,g)=>s+g.baseline,0),current:items.reduce((s,g)=>s+g.current,0),variance:items.reduce((s,g)=>s+(g.baseline-g.current),0),count:items.length};}
+
+// ═══ NAVIGATION ════════════════════════════════════════
+let currentInitId=null;
+function navigate(v,id,initId){currentView=v;currentWsId=id||null;currentInitId=initId||null;renderApp();}
+function renderApp(){if(currentView==='initiative'&&currentInitId)renderInitiativePage(currentInitId);else if(currentView==='detail'&&currentWsId)renderDetailPage(currentWsId);else renderDashboard();}
+function renderTopbar(mode,wsName,initName){const m=$('topbar-mount');
+  if(mode==='initiative'){const w=workstreams.find(x=>x.id===currentWsId);m.innerHTML=`<div class="topbar"><div class="topbar-inner"><div class="topbar-breadcrumb"><a onclick="navigate('dashboard')">Dashboard</a><span class="sep">›</span><a onclick="navigate('detail',${currentWsId})">${wsName}</a><span class="sep">›</span><span>${initName}</span></div><h1>${initName}</h1><div class="topbar-sub">Initiative detail view</div></div></div>`;}
+  else if(mode==='detail'){m.innerHTML=`<div class="topbar"><div class="topbar-inner"><div class="topbar-breadcrumb"><a onclick="navigate('dashboard')">Dashboard</a><span class="sep">›</span><span>${wsName}</span></div><h1>${wsName}</h1><div class="topbar-sub">Workstream detail view</div></div></div>`;}
+  else{m.innerHTML=`<div class="topbar"><div class="topbar-inner topbar-row"><div><div class="topbar-tag">◆ VALUE TRACKING</div><h1>Project Hopper Value Tracking Dashboard</h1><div class="topbar-sub">Savings by workstream overview</div></div><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn-add" onclick="exportCSV()">↓ Export CSV</button><button class="btn-add" onclick="openAddWs()"><span>+</span> Add Workstream</button></div></div></div>`;}}
+
+// ═══ DASHBOARD ═════════════════════════════════════════
+function renderDashboard(){renderTopbar('dashboard');
+  $('app-container').innerHTML=`<div class="stats-row" id="stats-row"></div>
+    <div class="charts-row"><div class="panel chart-panel-bar"><div class="panel-title">Target vs. Identified vs. Achieved</div><div id="bar-chart"></div><div class="legend" id="bar-legend"></div></div>
+      <div class="panel chart-panel-donut"><div class="panel-title">Achieved Savings Mix</div><div id="donut-chart"></div><div class="donut-legend"><div class="donut-legend-item"><div class="donut-legend-dot" style="background:var(--hologic-violet)"></div>Run-Rate</div><div class="donut-legend-item"><div class="donut-legend-dot" style="background:var(--teal)"></div>One-Time</div></div></div></div>
+    <div class="panel" id="progress-panel"><div class="panel-title">Savings Pipeline</div><div class="progress-legend"><span class="progress-legend-item"><span class="progress-legend-dot" style="background:var(--hologic-blue);opacity:0.2"></span> Target</span><span class="progress-legend-item"><span class="progress-legend-dot" style="background:var(--hologic-violet);opacity:0.5"></span> Identified</span><span class="progress-legend-item"><span class="progress-legend-dot" style="background:var(--green)"></span> Achieved</span></div><div id="progress-bars"></div></div>
+    <div class="table-wrap"><div class="table-header"><div class="table-header-label">All Workstreams & Initiatives</div><div class="table-header-label">Click workstream name for details</div></div>
+      <div class="table-scroll"><table><thead><tr><th>Name</th><th class="th-left">Description</th><th>Owner</th><th>Status</th><th>Type</th><th>Target</th><th>Identified</th><th>Actioned</th><th>Achieved</th><th>Duration</th></tr></thead><tbody id="table-body"></tbody></table></div></div>
+    <div class="footer">◆ Workstream values roll up from initiatives · Data persists during this browser session</div>`;
+  _stats();_bar();_donut();_progress();_table();}
+
+function _stats(){const a=allRollup();$('stats-row').innerHTML=[sc('◈','Target Savings',fmt(a.target),fmtFull(a.target),'var(--hologic-blue)'),sc('◎','Identified',fmt(a.identified),pctOf(a.identified,a.target)+' of target','var(--hologic-violet)'),sc('✓','Achieved',fmt(a.achieved),pctOf(a.achieved,a.target)+' of target','var(--green)'),sc('↻','Run-Rate',fmt(a.rrAchieved),a.rrCount+' initiatives','var(--teal)'),sc('◇','One-Time',fmt(a.otAchieved),a.otCount+' initiatives','var(--amber)'),sc('⚡','Actioned',fmt(a.actioned),pctOf(a.actioned,a.target)+' of target','var(--rose)')].join('');}
+function _bar(){const e=$('bar-chart'),l=$('bar-legend');if(!workstreams.length){e.innerHTML='<div style="color:var(--text-muted);padding:30px 0;text-align:center;font-size:13px">No workstreams yet</div>';l.innerHTML='';return;}const data=workstreams.map(w=>({name:w.name,...wsRollup(w)}));const mx=Math.max(...data.flatMap(d=>[d.target,d.identified,d.achieved]),1);const gW=48,bw=14,gap=20,h=130,tW=data.length*(gW+gap);e.innerHTML=`<svg width="100%" height="${h+18}" viewBox="0 0 ${tW} ${h+18}" style="overflow:visible">${data.map((d,i)=>{const x=i*(gW+gap),tH=(d.target/mx)*(h-24),iH=(d.identified/mx)*(h-24),aH=(d.achieved/mx)*(h-24);return `<g transform="translate(${x},0)"><rect y="${h-tH-2}" width="${bw}" height="${tH}" rx="2" fill="var(--hologic-blue)" opacity="0.2"/><rect x="${bw+2}" y="${h-iH-2}" width="${bw}" height="${iH}" rx="2" fill="var(--hologic-violet)" opacity="0.55"/><rect x="${(bw+2)*2}" y="${h-aH-2}" width="${bw}" height="${aH}" rx="2" fill="var(--green)" opacity="0.9"/><text x="${gW/2}" y="${h+12}" text-anchor="middle" fill="var(--text-muted)" font-size="9" font-family="var(--sans)">${trunc(d.name,10)}</text></g>`;}).join('')}</svg>`;l.innerHTML='<div class="legend-item"><div class="legend-dot" style="background:var(--hologic-blue);opacity:0.3"></div>Target</div><div class="legend-item"><div class="legend-dot" style="background:var(--hologic-violet);opacity:0.6"></div>Identified</div><div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Achieved</div>';}
+function _donut(){const e=$('donut-chart');const a=allRollup();const total=a.rrAchieved+a.otAchieved;if(!total){e.innerHTML='<svg width="140" height="140"></svg>';return;}const pct=a.rrAchieved/total,r=54,cx=70,cy=70,sw=14,circ=2*Math.PI*r;e.innerHTML=`<svg width="140" height="140" viewBox="0 0 140 140"><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--border)" stroke-width="${sw}"/><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--hologic-violet)" stroke-width="${sw}" stroke-dasharray="${pct*circ} ${circ}" stroke-dashoffset="${circ*0.25}" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--teal)" stroke-width="${sw}" stroke-dasharray="${(1-pct)*circ} ${circ}" stroke-dashoffset="${circ*0.25-pct*circ}" stroke-linecap="round"/><text x="${cx}" y="${cy-6}" text-anchor="middle" fill="var(--hologic-blue)" font-size="18" font-weight="700" font-family="var(--mono)">${Math.round(pct*100)}%</text><text x="${cx}" y="${cy+12}" text-anchor="middle" fill="var(--text-muted)" font-size="9" font-family="var(--mono)">RUN-RATE</text></svg>`;}
+function _progress(){const p=$('progress-panel'),e=$('progress-bars');if(!workstreams.length){p.style.display='none';return;}p.style.display='';const data=workstreams.map(w=>({name:w.name,...wsRollup(w)}));const mx=Math.max(...data.map(d=>d.target),1);e.innerHTML=data.map(d=>`<div class="progress-row"><div class="progress-name">${trunc(d.name,20)}</div><div class="progress-track"><div class="progress-fill" style="width:${(d.target/mx)*100}%;background:var(--hologic-blue);opacity:0.15"></div><div class="progress-fill" style="width:${(d.identified/mx)*100}%;background:var(--hologic-violet);opacity:0.4"></div><div class="progress-fill" style="width:${(d.achieved/mx)*100}%;background:var(--green);opacity:0.9"></div></div><div class="progress-labels"><span style="color:var(--green);font-weight:600">${fmt(d.achieved)}</span><span>/ ${fmt(d.target)}</span></div></div>`).join('');}
+function _table(){const tb=$('table-body');if(!workstreams.length){tb.innerHTML='<tr class="empty-row"><td colspan="10">No workstreams yet.</td></tr>';return;}let html='';workstreams.forEach((w,wi)=>{const r=wsRollup(w);const wsSt=wsStatus(w);const tl=r.hasRunRate&&r.hasOneTime?'Mixed':r.hasRunRate?'Run-Rate':r.hasOneTime?'One-Time':'—';const tb2=tl==='Run-Rate'?'badge-runrate':tl==='One-Time'?'badge-onetime':'badge-runrate';html+=`<tr class="rollup-row"><td class="td-name"><span class="dot" style="background:${COLORS[wi%COLORS.length]}"></span><a href="#" onclick="event.preventDefault();navigate('detail',${w.id})">${w.name}</a><span class="init-count">${r.count}</span></td><td class="td-desc td-left">${w.desc||'—'}</td><td class="td-owner">${w.owner||'—'}</td><td><span class="badge-status ${statusBadgeClass(wsSt)}">${wsSt}</span></td><td>${tl!=='—'?`<span class="badge ${tb2}">${tl}</span>`:'—'}</td><td class="td-currency">${fmtFull(r.target)}</td><td class="td-secondary">${fmtFull(r.identified)}</td><td class="td-secondary">${fmtFull(r.action)}</td><td class="td-green">${fmtFull(r.achieved)}</td><td class="td-duration">${r.duration?r.duration+'mo':'—'}</td></tr>`;wsInits(w.id).forEach(init=>{const bg=init.type==='Run-Rate'?'badge-runrate':'badge-onetime';const iS=init.status||'Not Started';html+=`<tr class="clickable" onclick="navigate('initiative',${w.id},${init.id})"><td class="td-left" style="padding-left:40px;font-size:12px;color:var(--text-secondary)">↳ <a href="#" onclick="event.stopPropagation();event.preventDefault();navigate('initiative',${w.id},${init.id})" style="color:var(--hologic-blue);text-decoration:none;border-bottom:1px dashed var(--border-strong)">${init.name}</a></td><td class="td-desc td-left">${init.desc||'—'}</td><td class="td-muted">—</td><td><span class="badge-status ${statusBadgeClass(iS)}">${iS}</span></td><td><span class="badge ${bg}">${init.type}</span></td><td class="td-secondary">${fmtFull(init.target)}</td><td class="td-secondary">${fmtFull(init.identified)}</td><td class="td-secondary">${fmtFull(init.action||0)}</td><td class="td-green">${fmtFull(init.achieved)}</td><td class="td-duration">${init.duration}mo</td></tr>`;});});tb.innerHTML=html;}
+
+// ═══ DETAIL PAGE ═══════════════════════════════════════
+function renderDetailPage(wsId){const w=workstreams.find(x=>x.id===wsId);if(!w){navigate('dashboard');return;}
+  renderTopbar('detail',w.name);const r=wsRollup(w);const aPct=r.target>0?Math.round((r.achieved/r.target)*100):0;const iPct=r.target>0?Math.round((r.identified/r.target)*100):0;
+  const rc=w.risk==='low'?'risk-low':w.risk==='high'?'risk-high':'risk-medium';const rl=(w.risk||'medium').charAt(0).toUpperCase()+(w.risk||'medium').slice(1)+' Risk';
+  const inits=wsInits(w.id),kpis=wsKpis(w.id);
+
+  $('app-container').innerHTML=`
+    <div class="stats-row">${sc('◈','Target',fmt(r.target),fmtFull(r.target),'var(--hologic-blue)')}${sc('◎','Identified',fmt(r.identified),iPct+'% of target','var(--hologic-violet)')}${sc('✓','Achieved',fmt(r.achieved),aPct+'% of target','var(--green)')}${sc('⏱','Duration',r.duration+'mo',r.count+' initiatives','var(--teal)')}</div>
+    <div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><div class="panel-title" style="margin:0">Workstream Details</div><button class="btn-sm" onclick="openEditWs(${w.id})">Edit Details</button></div>
+      <div class="detail-meta"><div><div class="meta-label">Owner</div><div class="meta-value">${w.owner||'—'}</div></div><div><div class="meta-label">Status</div><div class="meta-value"><span class="badge-status ${statusBadgeClass(wsStatus(w))}">${wsStatus(w)}</span></div></div><div><div class="meta-label">Initiatives</div><div class="meta-value">${r.count}</div></div><div><div class="meta-label">Actioned</div><div class="meta-value" style="font-family:var(--mono)">${fmtFull(r.action)}</div></div><div><div class="meta-label">Risk Level</div><div class="meta-value"><span class="risk-badge ${rc}"><span class="risk-dot" style="background:currentColor"></span>${rl}</span></div></div></div>
+      ${w.desc?`<div style="margin-top:16px"><div class="meta-label">Description</div><div style="font-size:14px;color:var(--text-secondary);margin-top:4px;line-height:1.6">${w.desc}</div></div>`:''}</div>
+    <div class="table-wrap"><div class="table-header"><div class="table-header-label">Initiatives</div><button class="btn-sm-primary" onclick="openAddInit(${w.id})">+ Add Initiative</button></div>
+      <div class="table-scroll"><table><thead><tr><th>Initiative</th><th class="th-left">Description</th><th>Status</th><th>Type</th><th>Target</th><th>Identified</th><th>Actioned</th><th>Achieved</th><th>Duration</th></tr></thead><tbody id="init-tbody"></tbody></table></div></div>
+    <div id="gl-sections"></div>
+    <div class="panel"><div class="panel-title">Savings Progress (Rolled Up)</div><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-secondary);margin-bottom:6px"><span>Achieved: ${fmtFull(r.achieved)}</span><span>Target: ${fmtFull(r.target)}</span></div>
+      <div style="width:100%;height:24px;background:var(--bg);border-radius:8px;overflow:hidden;position:relative"><div style="position:absolute;top:0;left:0;height:100%;width:${iPct}%;background:var(--hologic-violet);opacity:0.2;border-radius:8px"></div><div style="position:absolute;top:0;left:0;height:100%;width:${aPct}%;background:var(--green);border-radius:8px"></div></div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div class="panel-title" style="margin:0">Key Performance Indicators</div><button class="btn-sm-primary" onclick="openAddKpi(${w.id})">+ Add KPI</button></div>
+    <div class="kpi-grid" id="kpi-grid"></div>
+    <!-- WORKPLAN -->
+    <div class="table-wrap"><div class="table-header"><div class="table-header-label">Workplan</div><button class="btn-sm-primary" onclick="openAddWp(${w.id})">+ Add Item</button></div>
+      <div class="table-scroll"><table><thead><tr><th>Name</th><th class="th-left">Owner</th><th>Status</th><th class="th-left">Impacted BUs</th><th>Start</th><th>End</th><th class="th-left">Dependency</th></tr></thead><tbody id="wp-tbody"></tbody></table></div></div>
+    <div class="detail-grid"><div class="panel"><div class="panel-title">Notes</div>
+      <div class="notes-input-row"><textarea class="notes-area" id="ws-notes-input" placeholder="Add a note…" rows="2"></textarea><button class="btn-sm-primary" onclick="submitNote('ws',${w.id})" style="white-space:nowrap;align-self:flex-end">Submit</button></div>
+      <ul class="notes-log" id="ws-notes-log"></ul></div><div></div></div>
+    <div style="display:flex;gap:10px"><button class="btn-sm" onclick="navigate('dashboard')">← Back to Dashboard</button><button class="btn-sm" onclick="exportWsCSV(${w.id})">↓ Export Workstream CSV</button></div>
+    <div class="footer">◆ Milestone status auto-rolls up from tasks · Click any item to edit</div>`;
+
+  // Init table
+  const itb=$('init-tbody');
+  if(!inits.length)itb.innerHTML='<tr class="empty-row"><td colspan="9">No initiatives yet.</td></tr>';
+  else itb.innerHTML=inits.map(init=>{const bg=init.type==='Run-Rate'?'badge-runrate':'badge-onetime';const iS=init.status||'Not Started';return `<tr class="clickable" onclick="navigate('initiative',${w.id},${init.id})"><td class="td-name"><a href="#" onclick="event.stopPropagation();event.preventDefault();navigate('initiative',${w.id},${init.id})">${init.name}</a></td><td class="td-desc td-left">${init.desc||'—'}</td><td><span class="badge-status ${statusBadgeClass(iS)}">${iS}</span></td><td><span class="badge ${bg}">${init.type}</span></td><td class="td-currency">${fmtFull(init.target)}</td><td class="td-secondary">${fmtFull(init.identified)}</td><td class="td-secondary">${fmtFull(init.action||0)}</td><td class="td-green">${fmtFull(init.achieved)}</td><td class="td-duration">${init.duration}mo</td></tr>`;}).join('');
+
+  // GL sections
+  const glEl=$('gl-sections');
+  glEl.innerHTML=inits.map(init=>renderGlSection(init.id,init.name)).join('');
+
+  // KPIs
+  const kE=$('kpi-grid');
+  if(!kpis.length)kE.innerHTML='<div style="color:var(--text-muted);font-size:13px;padding:20px 0">No KPIs yet.</div>';
+  else kE.innerHTML=kpis.map(k=>{const nv=parseFloat(k.value)||0,nt=parseFloat(k.target)||1,pct=Math.min(100,Math.round((nv/nt)*100));const bc=k.status==='green'?'var(--green)':k.status==='red'?'var(--rose)':'var(--amber)';const sl=k.status==='green'?'On Track':k.status==='red'?'Off Track':'At Risk';return `<div class="kpi-card" onclick="openEditKpi(${w.id},${k.id})"><div class="kpi-header"><div class="kpi-name">${k.name}</div><div class="kpi-status kpi-status-${k.status}">${sl}</div></div><div class="kpi-value">${k.value}</div><div class="kpi-target">Target: ${k.target} ${k.unit}</div><div class="kpi-bar-track"><div class="kpi-bar-fill" style="width:${pct}%;background:${bc}"></div></div></div>`;}).join('');
+
+  // Workplan - grouped by initiative
+  const wpTb=$('wp-tbody');
+  let wpHtml='';
+  inits.forEach(init=>{
+    const items=initWp(init.id);
+    const milestones=items.filter(i=>i.level==='Milestone');
+    if(!milestones.length&&!items.length)return;
+    wpHtml+=`<tr><td colspan="7" class="wp-init-header">▸ ${init.name}</td></tr>`;
+    milestones.forEach(ms=>{
+      const rolledStatus=milestoneRollupStatus(ms.id);
+      const displayStatus=rolledStatus||ms.status;
+      wpHtml+=`<tr class="wp-milestone-row clickable" onclick="openEditWp(${w.id},${ms.id})"><td class="td-left">◆ ${ms.name}</td><td class="td-left td-owner">${ms.owner||'—'}</td><td><span class="badge-status ${statusBadgeClass(displayStatus)}">${displayStatus}</span></td><td class="td-left">${buTags(ms.bus)}</td><td class="td-muted">${ms.start||'—'}</td><td class="td-muted">${ms.end||'—'}</td><td class="td-left td-muted">${ms.dep||'—'}</td></tr>`;
+      wpChildren(ms.id).forEach(task=>{
+        wpHtml+=`<tr class="wp-task-row clickable" onclick="openEditWp(${w.id},${task.id})"><td class="td-left" style="color:var(--text-secondary);font-size:12px">↳ ${task.name}</td><td class="td-left td-owner">${task.owner||'—'}</td><td><span class="badge-status ${statusBadgeClass(task.status)}">${task.status}</span></td><td class="td-left">${buTags(task.bus)}</td><td class="td-muted">${task.start||'—'}</td><td class="td-muted">${task.end||'—'}</td><td class="td-left td-muted">${task.dep||'—'}</td></tr>`;
+      });
+    });
+  });
+  if(!wpHtml)wpHtml='<tr class="empty-row"><td colspan="7">No workplan items yet.</td></tr>';
+  wpTb.innerHTML=wpHtml;
+
+  // Notes log
+  renderNotes('ws',wsId);
+}
+function saveNotes(){}
+let nextNoteId=100;
+function submitNote(type,id){
+  const obj=type==='ws'?workstreams.find(x=>x.id===id):allInits.find(x=>x.id===id);if(!obj)return;
+  const input=$(type+'-notes-input');const text=input.value.trim();if(!text){toast('Enter a note first','error');return;}
+  if(!Array.isArray(obj.notes))obj.notes=[];
+  obj.notes.unshift({id:nextNoteId++,text,date:new Date().toISOString()});
+  input.value='';renderNotes(type,id);toast('Note added');}
+function deleteNote(type,ownerId,noteId){
+  const obj=type==='ws'?workstreams.find(x=>x.id===ownerId):allInits.find(x=>x.id===ownerId);if(!obj)return;
+  obj.notes=obj.notes.filter(n=>n.id!==noteId);renderNotes(type,ownerId);}
+function renderNotes(type,id){
+  const obj=type==='ws'?workstreams.find(x=>x.id===id):allInits.find(x=>x.id===id);if(!obj)return;
+  const el=$(type+'-notes-log');if(!el)return;
+  const notes=Array.isArray(obj.notes)?obj.notes:[];
+  if(!notes.length){el.innerHTML='<div style="color:var(--text-muted);font-size:13px;padding:12px 0">No notes yet. Add one above.</div>';return;}
+  el.innerHTML=notes.map(n=>{
+    const d=new Date(n.date);const dateStr=d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+' at '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    return `<li class="notes-entry"><div class="notes-entry-header"><span class="notes-entry-date">${dateStr}</span><button class="notes-entry-delete" onclick="event.stopPropagation();deleteNote('${type}',${id},${n.id})" title="Delete note">✕</button></div><div class="notes-entry-text">${n.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div></li>`;
+  }).join('');}
+
+// ═══ INITIATIVE DETAIL PAGE ════════════════════════════
+function renderInitiativePage(initId){
+  const init=allInits.find(x=>x.id===initId);if(!init){navigate('dashboard');return;}
+  const w=workstreams.find(x=>x.id===init.wsId);if(!w){navigate('dashboard');return;}
+  renderTopbar('initiative',w.name,init.name);
+
+  const aPct=init.target>0?Math.round((init.achieved/init.target)*100):0;
+  const iPct=init.target>0?Math.round((init.identified/init.target)*100):0;
+  const acPct=init.target>0?Math.round(((init.action||0)/init.target)*100):0;
+  const glS=glSummary(init.id);
+  const wpItems=initWp(init.id);
+  const milestones=wpItems.filter(i=>i.level==='Milestone');
+
+  $('app-container').innerHTML=`
+    <div class="stats-row">
+      ${sc('◈','Target',fmt(init.target),fmtFull(init.target),'var(--hologic-blue)')}
+      ${sc('◎','Identified',fmt(init.identified),iPct+'% of target','var(--hologic-violet)')}
+      ${sc('⚡','Actioned',fmt(init.action||0),acPct+'% of target','var(--amber)')}
+      ${sc('✓','Achieved',fmt(init.achieved),aPct+'% of target','var(--green)')}
+    </div>
+
+    <div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><div class="panel-title" style="margin:0">Initiative Details</div><button class="btn-sm" onclick="openEditInit(${w.id},${init.id})">Edit Initiative</button></div>
+      <div class="detail-meta">
+        <div><div class="meta-label">Workstream</div><div class="meta-value"><a href="#" onclick="event.preventDefault();navigate('detail',${w.id})" style="color:var(--hologic-blue);text-decoration:none;border-bottom:1px dashed var(--border-strong)">${w.name}</a></div></div>
+        <div><div class="meta-label">Status</div><div class="meta-value"><span class="badge-status ${statusBadgeClass(init.status)}">${init.status}</span></div></div>
+        <div><div class="meta-label">Savings Type</div><div class="meta-value"><span class="badge ${init.type==='Run-Rate'?'badge-runrate':'badge-onetime'}">${init.type}</span></div></div>
+        <div><div class="meta-label">Duration</div><div class="meta-value" style="font-family:var(--mono)">${init.duration} months</div></div>
+        <div><div class="meta-label">GL Variance</div><div class="meta-value" style="font-family:var(--mono);color:${glS.variance>=0?'var(--green)':'var(--rose)'}">${glS.count?'$'+glS.variance.toLocaleString():'No GL data'}</div></div>
+        <div><div class="meta-label">Workplan Items</div><div class="meta-value">${wpItems.length} (${milestones.length} milestones)</div></div>
+      </div>
+      ${init.desc?`<div style="margin-top:16px"><div class="meta-label">Description</div><div style="font-size:14px;color:var(--text-secondary);margin-top:4px;line-height:1.6">${init.desc}</div></div>`:''}</div>
+
+    <!-- Savings Progress -->
+    <div class="panel"><div class="panel-title">Savings Progress</div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-secondary);margin-bottom:6px"><span>Achieved: ${fmtFull(init.achieved)}</span><span>Target: ${fmtFull(init.target)}</span></div>
+      <div style="width:100%;height:24px;background:var(--bg);border-radius:8px;overflow:hidden;position:relative">
+        <div style="position:absolute;top:0;left:0;height:100%;width:${iPct}%;background:var(--hologic-violet);opacity:0.15;border-radius:8px"></div>
+        <div style="position:absolute;top:0;left:0;height:100%;width:${acPct}%;background:var(--amber);opacity:0.3;border-radius:8px"></div>
+        <div style="position:absolute;top:0;left:0;height:100%;width:${aPct}%;background:var(--green);border-radius:8px"></div>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:8px;font-size:10px;font-family:var(--mono);color:var(--text-muted);letter-spacing:0.8px;text-transform:uppercase">
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:var(--green);display:inline-block"></span>Achieved ${aPct}%</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:var(--amber);opacity:0.4;display:inline-block"></span>Actioned ${acPct}%</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:var(--hologic-violet);opacity:0.2;display:inline-block"></span>Identified ${iPct}%</span>
+      </div></div>
+
+    <!-- GL Reconciliation -->
+    <div id="init-gl-section"></div>
+
+    <!-- Workplan -->
+    <div class="table-wrap"><div class="table-header"><div class="table-header-label">Workplan</div><button class="btn-sm-primary" onclick="openAddWpForInit(${w.id},${init.id})">+ Add Item</button></div>
+      <div class="table-scroll"><table><thead><tr><th>Name</th><th class="th-left">Owner</th><th>Status</th><th class="th-left">Impacted BUs</th><th>Start</th><th>End</th><th class="th-left">Dependency</th></tr></thead><tbody id="init-wp-tbody"></tbody></table></div></div>
+
+    <!-- Notes -->
+    <div class="panel"><div class="panel-title">Initiative Notes</div>
+      <div class="notes-input-row"><textarea class="notes-area" id="init-notes-input" placeholder="Add a note…" rows="2"></textarea><button class="btn-sm-primary" onclick="submitNote('init',${init.id})" style="white-space:nowrap;align-self:flex-end">Submit</button></div>
+      <ul class="notes-log" id="init-notes-log"></ul></div>
+
+    <div style="display:flex;gap:10px"><button class="btn-sm" onclick="navigate('detail',${w.id})">← Back to ${trunc(w.name,20)}</button></div>
+    <div class="footer">◆ Click any workplan item to edit</div>`;
+
+  // GL section
+  $('init-gl-section').innerHTML=renderGlSection(init.id,init.name);
+
+  // Workplan table
+  const wpTb=$('init-wp-tbody');
+  let wpHtml='';
+  milestones.forEach(ms=>{
+    const rolledStatus=milestoneRollupStatus(ms.id)||ms.status;
+    wpHtml+=`<tr class="wp-milestone-row clickable" onclick="openEditWp(${w.id},${ms.id})"><td class="td-left">◆ ${ms.name}</td><td class="td-left td-owner">${ms.owner||'—'}</td><td><span class="badge-status ${statusBadgeClass(rolledStatus)}">${rolledStatus}</span></td><td class="td-left">${buTags(ms.bus)}</td><td class="td-muted">${ms.start||'—'}</td><td class="td-muted">${ms.end||'—'}</td><td class="td-left td-muted">${ms.dep||'—'}</td></tr>`;
+    wpChildren(ms.id).forEach(task=>{
+      wpHtml+=`<tr class="wp-task-row clickable" onclick="openEditWp(${w.id},${task.id})"><td class="td-left" style="color:var(--text-secondary);font-size:12px">↳ ${task.name}</td><td class="td-left td-owner">${task.owner||'—'}</td><td><span class="badge-status ${statusBadgeClass(task.status)}">${task.status}</span></td><td class="td-left">${buTags(task.bus)}</td><td class="td-muted">${task.start||'—'}</td><td class="td-muted">${task.end||'—'}</td><td class="td-left td-muted">${task.dep||'—'}</td></tr>`;
+    });
+  });
+  if(!wpHtml)wpHtml='<tr class="empty-row"><td colspan="7">No workplan items for this initiative.</td></tr>';
+  wpTb.innerHTML=wpHtml;
+
+  // Notes
+  renderNotes('init',init.id);
+}
+
+// Helper to open workplan modal pre-set to a specific initiative
+function openAddWpForInit(wsId,initId){
+  openAddWp(wsId);
+  // Pre-select the initiative
+  setTimeout(()=>{$('wpf-init').value=initId;},0);
+}
+
+// ═══ GL RENDERING ══════════════════════════════════════
+function renderGlSection(initId,initName){const items=initGl(initId);const s=glSummary(initId);const init=allInits.find(x=>x.id===initId);
+  const achievedDelta=init?Math.abs(s.variance-init.achieved):0;const rs=!items.length?'none':achievedDelta===0?'matched':achievedDelta<s.variance*0.1?'partial':'unmatched';
+  const rb=rs==='matched'?'<span class="gl-reconcile-badge gl-matched">✔ Reconciled</span>':rs==='partial'?'<span class="gl-reconcile-badge gl-partial">~ Partial Match</span>':rs==='unmatched'?'<span class="gl-reconcile-badge gl-unmatched">✗ Variance</span>':'';
+  let h=`<div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px"><div style="display:flex;align-items:center;gap:10px"><div class="panel-title" style="margin:0">GL Reconciliation — ${initName}</div>${rb}</div><div style="display:flex;gap:8px"><button class="btn-sm" onclick="importGlCSV(${initId})">↑ Import CSV</button><button class="btn-sm-primary" onclick="openAddGl(${initId})">+ Add Line Item</button></div></div>`;
+  if(!items.length){h+=`<div class="file-drop" onclick="importGlCSV(${initId})"><div style="font-size:24px;margin-bottom:8px;opacity:0.4">↑</div><div>Click to import GL data from CSV</div></div>`;}
+  else{h+=`<div class="table-scroll"><table class="gl-table"><thead><tr><th style="text-align:left">GL Account</th><th style="text-align:left">Cost Center</th><th style="text-align:left">Description</th><th>Baseline</th><th>Current</th><th>Variance</th></tr></thead><tbody>`;
+    items.forEach(g=>{const v=g.baseline-g.current;const vc=v>0?'gl-variance-pos':v<0?'gl-variance-neg':'gl-variance-zero';h+=`<tr class="clickable" onclick="openEditGl(${initId},${g.id})"><td class="td-left" style="font-family:var(--mono);font-size:12px">${g.account||'—'}</td><td class="td-left" style="font-size:12px">${g.costCenter||'—'}</td><td class="td-left td-desc">${g.desc||'—'}</td><td class="td-secondary">${fmtFull(g.baseline)}</td><td class="td-secondary">${fmtFull(g.current)}</td><td class="${vc}">${v>=0?'+':''}${fmtFull(v)}</td></tr>`;});
+    h+=`</tbody></table></div><div class="gl-summary"><div class="gl-summary-item"><div class="gl-summary-label">Total Baseline</div><div class="gl-summary-value">${fmtFull(s.baseline)}</div></div><div class="gl-summary-item"><div class="gl-summary-label">Total Current</div><div class="gl-summary-value">${fmtFull(s.current)}</div></div><div class="gl-summary-item"><div class="gl-summary-label">GL Variance</div><div class="gl-summary-value" style="color:${s.variance>=0?'var(--green)':'var(--rose)'}">${s.variance>=0?'+':''}${fmtFull(s.variance)}</div></div>${init?`<div class="gl-summary-item"><div class="gl-summary-label">Dashboard Achieved</div><div class="gl-summary-value">${fmtFull(init.achieved)}</div></div><div class="gl-summary-item"><div class="gl-summary-label">Difference</div><div class="gl-summary-value" style="color:${achievedDelta===0?'var(--green)':'var(--amber)'}">$${achievedDelta.toLocaleString()}</div></div>`:''}</div>`;}
+  return h+'</div>';}
+
+// ═══ CRUD: WORKSTREAM ══════════════════════════════════
+function openAddWs(){editWsId=null;$('ws-modal-title').textContent='Add Workstream';$('ws-btn-save').textContent='Create';$('ws-btn-del').style.display='none';$('wf-name').value='';$('wf-desc').value='';$('wf-owner').value='';$('ws-modal').classList.add('active');}
+function openEditWs(id){const w=workstreams.find(x=>x.id===id);if(!w)return;editWsId=id;$('ws-modal-title').textContent='Edit Workstream';$('ws-btn-save').textContent='Save';$('ws-btn-del').style.display='';$('wf-name').value=w.name;$('wf-desc').value=w.desc;$('wf-owner').value=w.owner;$('ws-modal').classList.add('active');}
+function saveWs(){const name=$('wf-name').value.trim()||'Untitled',desc=$('wf-desc').value.trim(),owner=$('wf-owner').value.trim();if(editWsId!==null){const w=workstreams.find(x=>x.id===editWsId);if(w)Object.assign(w,{name,desc,owner});}else{const id=nextWsId++;workstreams.push({id,name,desc,owner,risk:'medium',notes:''});allInits.push({id:nextInitId++,wsId:id,name:'Initiative 1',desc:'',type:'Run-Rate',status:'Not Started',target:0,identified:0,action:0,achieved:0,duration:12});}$('ws-modal').classList.remove('active');renderApp();toast('Workstream saved');}
+function deleteWs(){if(editWsId===null)return;const initIds=wsInits(editWsId).map(i=>i.id);allGl=allGl.filter(g=>!initIds.includes(g.initId));allWp=allWp.filter(w=>!initIds.includes(w.initId));allInits=allInits.filter(i=>i.wsId!==editWsId);allKpis=allKpis.filter(k=>k.wsId!==editWsId);workstreams=workstreams.filter(w=>w.id!==editWsId);if(currentView==='detail'&&currentWsId===editWsId)currentView='dashboard';$('ws-modal').classList.remove('active');renderApp();toast('Workstream deleted');}
+
+// ═══ CRUD: INITIATIVE ══════════════════════════════════
+function setType(t){formType=t;$('btn-onetime').className='type-btn'+(t==='One-Time'?' active':'');$('btn-runrate').className='type-btn'+(t==='Run-Rate'?' active':'');}
+function openAddInit(wsId){editInitWsId=wsId;editInitId=null;$('init-modal-title').textContent='Add Initiative';$('init-btn-save').textContent='Add';$('init-btn-del').style.display='none';$('if-name').value='';$('if-desc').value='';$('if-target').value='0';$('if-identified').value='0';$('if-action').value='0';$('if-achieved').value='0';$('if-duration').value='12';$('if-status').value='Not Started';setType('Run-Rate');$('init-modal').classList.add('active');}
+function openEditInit(wsId,initId){const init=allInits.find(x=>x.id===initId);if(!init)return;editInitWsId=wsId;editInitId=initId;$('init-modal-title').textContent='Edit Initiative';$('init-btn-save').textContent='Save';$('init-btn-del').style.display='';$('if-name').value=init.name;$('if-desc').value=init.desc;$('if-target').value=init.target;$('if-identified').value=init.identified;$('if-action').value=init.action||0;$('if-achieved').value=init.achieved;$('if-duration').value=init.duration;$('if-status').value=init.status||'Not Started';setType(init.type);$('init-modal').classList.add('active');}
+function saveInit(){const name=$('if-name').value.trim()||'Untitled',desc=$('if-desc').value.trim(),status=$('if-status').value;const target=Math.max(0,Number($('if-target').value)||0),identified=Math.max(0,Number($('if-identified').value)||0),action=Math.max(0,Number($('if-action').value)||0),achieved=Math.max(0,Number($('if-achieved').value)||0),duration=Math.max(1,Math.round(Number($('if-duration').value)||1));if(editInitId!==null){const init=allInits.find(x=>x.id===editInitId);if(init)Object.assign(init,{name,desc,type:formType,status,target,identified,action,achieved,duration});}else{allInits.push({id:nextInitId++,wsId:editInitWsId,name,desc,type:formType,status,target,identified,action,achieved,duration});}$('init-modal').classList.remove('active');renderApp();toast('Initiative saved');}
+function deleteInit(){if(editInitId===null)return;allGl=allGl.filter(g=>g.initId!==editInitId);allWp=allWp.filter(w=>w.initId!==editInitId);allInits=allInits.filter(i=>i.id!==editInitId);
+  if(currentView==='initiative'&&currentInitId===editInitId){currentView='detail';}
+  $('init-modal').classList.remove('active');renderApp();toast('Initiative deleted');}
+
+// ═══ CRUD: KPI ═════════════════════════════════════════
+function openAddKpi(wsId){editKpiWsId=wsId;editKpiId=null;$('kpi-modal-title').textContent='Add KPI';$('kpi-btn-del').style.display='none';$('kf-name').value='';$('kf-value').value='';$('kf-target').value='';$('kf-unit').value='';$('kf-status').value='green';$('kpi-modal').classList.add('active');}
+function openEditKpi(wsId,kpiId){const k=allKpis.find(x=>x.id===kpiId);if(!k)return;editKpiWsId=wsId;editKpiId=kpiId;$('kpi-modal-title').textContent='Edit KPI';$('kpi-btn-del').style.display='';$('kf-name').value=k.name;$('kf-value').value=k.value;$('kf-target').value=k.target;$('kf-unit').value=k.unit;$('kf-status').value=k.status;$('kpi-modal').classList.add('active');}
+function saveKpi(){const name=$('kf-name').value.trim()||'Untitled',value=$('kf-value').value.trim(),target=$('kf-target').value.trim(),unit=$('kf-unit').value.trim(),status=$('kf-status').value;if(editKpiId!==null){const k=allKpis.find(x=>x.id===editKpiId);if(k)Object.assign(k,{name,value,target,unit,status});}else{allKpis.push({id:nextKpiId++,wsId:editKpiWsId,name,value,target,unit,status});}$('kpi-modal').classList.remove('active');renderApp();toast('KPI saved');}
+function deleteKpi(){if(editKpiId===null)return;allKpis=allKpis.filter(k=>k.id!==editKpiId);$('kpi-modal').classList.remove('active');renderApp();toast('KPI deleted');}
+
+// ═══ CRUD: GL ══════════════════════════════════════════
+function openAddGl(initId){editGlInitId=initId;editGlId=null;$('gl-modal-title').textContent='Add GL Line Item';$('gl-btn-del').style.display='none';$('gf-account').value='';$('gf-costcenter').value='';$('gf-desc').value='';$('gf-baseline').value='0';$('gf-current').value='0';$('gl-modal').classList.add('active');}
+function openEditGl(initId,glId){const g=allGl.find(x=>x.id===glId);if(!g)return;editGlInitId=initId;editGlId=glId;$('gl-modal-title').textContent='Edit GL Line Item';$('gl-btn-del').style.display='';$('gf-account').value=g.account;$('gf-costcenter').value=g.costCenter;$('gf-desc').value=g.desc;$('gf-baseline').value=g.baseline;$('gf-current').value=g.current;$('gl-modal').classList.add('active');}
+function saveGl(){const account=$('gf-account').value.trim(),costCenter=$('gf-costcenter').value.trim(),desc=$('gf-desc').value.trim();const baseline=Math.max(0,Number($('gf-baseline').value)||0),current=Math.max(0,Number($('gf-current').value)||0);if(editGlId!==null){const g=allGl.find(x=>x.id===editGlId);if(g)Object.assign(g,{account,costCenter,desc,baseline,current});}else{allGl.push({id:nextGlId++,initId:editGlInitId,account,costCenter,desc,baseline,current});}$('gl-modal').classList.remove('active');renderApp();toast('GL line item saved');}
+function deleteGl(){if(editGlId===null)return;allGl=allGl.filter(g=>g.id!==editGlId);$('gl-modal').classList.remove('active');renderApp();toast('GL line item deleted');}
+function importGlCSV(initId){const input=document.createElement('input');input.type='file';input.accept='.csv,.txt';input.onchange=function(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(ev){const lines=ev.target.result.split(/\r?\n/).filter(l=>l.trim());if(lines.length<2){toast('CSV needs header + data','error');return;}const header=lines[0].split(',').map(h=>h.trim().toLowerCase().replace(/[^a-z0-9]/g,''));const cm={account:-1,costcenter:-1,desc:-1,baseline:-1,current:-1};header.forEach((h,i)=>{if(h.includes('account')||h.includes('gl'))cm.account=i;if(h.includes('cost')||h.includes('center')||h.includes('dept'))cm.costcenter=i;if(h.includes('desc')||h.includes('name')||h.includes('detail'))cm.desc=i;if(h.includes('baseline')||h.includes('prior')||h.includes('budget'))cm.baseline=i;if(h.includes('current')||h.includes('actual')||h.includes('period'))cm.current=i;});let n=0;for(let i=1;i<lines.length;i++){const cols=parseCSVLine(lines[i]);if(cols.length<2)continue;allGl.push({id:nextGlId++,initId,account:cm.account>=0?cols[cm.account]||'':'',costCenter:cm.costcenter>=0?cols[cm.costcenter]||'':'',desc:cm.desc>=0?cols[cm.desc]||'':'',baseline:cm.baseline>=0?parseFloat((cols[cm.baseline]||'0').replace(/[$,]/g,''))||0:0,current:cm.current>=0?parseFloat((cols[cm.current]||'0').replace(/[$,]/g,''))||0:0});n++;}toast(n+' GL items imported');renderApp();};reader.readAsText(file);};input.click();}
+function parseCSVLine(line){const r=[];let c='',q=false;for(let i=0;i<line.length;i++){const ch=line[i];if(q){if(ch==='"'&&line[i+1]==='"'){c+='"';i++;}else if(ch==='"')q=false;else c+=ch;}else{if(ch==='"')q=true;else if(ch===','){r.push(c.trim());c='';}else c+=ch;}}r.push(c.trim());return r;}
+
+// ═══ CRUD: WORKPLAN ════════════════════════════════════
+function setWpLevel(l){wpLevel=l;$('wp-btn-milestone').className='type-btn'+(l==='Milestone'?' active':'');$('wp-btn-task').className='type-btn'+(l==='Task'?' active':'');$('wp-parent-field').style.display=l==='Task'?'':'none';if(l==='Task')populateParentMilestones();}
+
+function populateParentMilestones(){const initId=Number($('wpf-init').value);const milestones=allWp.filter(w=>w.initId===initId&&w.level==='Milestone');$('wpf-parent').innerHTML=milestones.map(m=>`<option value="${m.id}">${m.name}</option>`).join('')||'<option value="">No milestones — create one first</option>';}
+
+function openAddWp(wsId){editWpWsId=wsId;editWpId=null;$('wp-modal-title').textContent='Add Workplan Item';$('wp-btn-save').textContent='Add';$('wp-btn-del').style.display='none';
+  // Populate initiative dropdown
+  const inits=wsInits(wsId);$('wpf-init').innerHTML=inits.map(i=>`<option value="${i.id}">${i.name}</option>`).join('');
+  // Populate dependency dropdown
+  $('wpf-dep').innerHTML='<option value="">— None —</option>'+workstreams.map(w=>`<option value="${w.name}">${w.name}</option>`).join('');
+  $('wpf-name').value='';$('wpf-owner').value='';$('wpf-status').value='Not Started';$('wpf-start').value='';$('wpf-end').value='';$('wpf-comments').value='';
+  BU_OPTIONS.forEach(b=>{const cb=$('wpf-bus').querySelector(`input[value="${b}"]`);if(cb)cb.checked=false;});
+  setWpLevel('Milestone');$('wp-modal').classList.add('active');
+  $('wpf-init').onchange=()=>{if(wpLevel==='Task')populateParentMilestones();};}
+
+function openEditWp(wsId,wpId){const item=allWp.find(x=>x.id===wpId);if(!item)return;editWpWsId=wsId;editWpId=wpId;$('wp-modal-title').textContent='Edit Workplan Item';$('wp-btn-save').textContent='Save';$('wp-btn-del').style.display='';
+  const inits=wsInits(wsId);$('wpf-init').innerHTML=inits.map(i=>`<option value="${i.id}"${i.id===item.initId?' selected':''}>${i.name}</option>`).join('');
+  $('wpf-dep').innerHTML='<option value="">— None —</option>'+workstreams.map(w=>`<option value="${w.name}"${w.name===item.dep?' selected':''}>${w.name}</option>`).join('');
+  $('wpf-name').value=item.name;$('wpf-owner').value=item.owner||'';$('wpf-status').value=item.status;$('wpf-start').value=item.start||'';$('wpf-end').value=item.end||'';$('wpf-comments').value=item.comments||'';
+  BU_OPTIONS.forEach(b=>{const cb=$('wpf-bus').querySelector(`input[value="${b}"]`);if(cb)cb.checked=(item.bus||[]).includes(b);});
+  setWpLevel(item.level);
+  if(item.level==='Task'){populateParentMilestones();$('wpf-parent').value=item.parentId||'';}
+  // Disable status for milestones with tasks (auto-rolled)
+  $('wpf-init').onchange=()=>{if(wpLevel==='Task')populateParentMilestones();}
+  $('wp-modal').classList.add('active');}
+
+function saveWp(){const name=$('wpf-name').value.trim()||'Untitled',initId=Number($('wpf-init').value),owner=$('wpf-owner').value.trim(),status=$('wpf-status').value;
+  const start=$('wpf-start').value,end=$('wpf-end').value,dep=$('wpf-dep').value,comments=$('wpf-comments').value.trim();
+  const bus=BU_OPTIONS.filter(b=>{const cb=$('wpf-bus').querySelector(`input[value="${b}"]`);return cb&&cb.checked;});
+  const parentId=wpLevel==='Task'?(Number($('wpf-parent').value)||null):null;
+  const init=allInits.find(x=>x.id===initId);const wsId=init?init.wsId:editWpWsId;
+  if(editWpId!==null){const item=allWp.find(x=>x.id===editWpId);if(item)Object.assign(item,{name,initId,wsId,level:wpLevel,parentId,owner,status,start,end,bus,dep,comments});}
+  else{allWp.push({id:nextWpId++,initId,wsId,level:wpLevel,parentId,name,owner,status,start,end,bus,dep,comments});}
+  $('wp-modal').classList.remove('active');renderApp();toast('Workplan item saved');}
+
+function deleteWp(){if(editWpId===null)return;
+  // If deleting a milestone, also delete its child tasks
+  const item=allWp.find(x=>x.id===editWpId);
+  if(item&&item.level==='Milestone')allWp=allWp.filter(w=>w.parentId!==editWpId);
+  allWp=allWp.filter(w=>w.id!==editWpId);$('wp-modal').classList.remove('active');renderApp();toast('Workplan item deleted');}
+
+// ═══ CSV EXPORT ════════════════════════════════════════
+function csvEsc(v){const s=String(v==null?'':v);return(s.includes(',')||s.includes('"')||s.includes('\n'))?'"'+s.replace(/"/g,'""')+'"':s;}
+function dlCSV(fn,csv){const b=new Blob([csv],{type:'text/csv;charset=utf-8;'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=fn;a.style.display='none';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);}
+
+function exportCSV(){const h=['Workstream','WS Status','Initiative','Init Status','Description','Type','Target','Identified','Actioned','Achieved','Duration'];let rows=[];
+  workstreams.forEach(w=>{const wsSt=wsStatus(w);wsInits(w.id).forEach(i=>{rows.push([csvEsc(w.name),csvEsc(wsSt),csvEsc(i.name),csvEsc(i.status||'Not Started'),csvEsc(i.desc),csvEsc(i.type),i.target,i.identified,i.action||0,i.achieved,i.duration].join(','));});});
+  dlCSV('project-hopper-all-workstreams.csv',[h.join(','),...rows].join('\n'));}
+
+function exportWsCSV(wsId){const w=workstreams.find(x=>x.id===wsId);if(!w)return;const r=wsRollup(w);const inits=wsInits(w.id);let lines=[];
+  lines.push('WORKSTREAM SUMMARY');lines.push('Field,Value');lines.push('Name,'+csvEsc(w.name));lines.push('Description,'+csvEsc(w.desc));lines.push('Owner,'+csvEsc(w.owner));lines.push('Status,'+csvEsc(wsStatus(w)));lines.push('Total Target,'+r.target);lines.push('Total Identified,'+r.identified);lines.push('Total Actioned,'+r.action);lines.push('Total Achieved,'+r.achieved);lines.push('');
+  lines.push('INITIATIVES');if(inits.length){lines.push('Initiative,Status,Type,Target,Identified,Actioned,Achieved,Duration');inits.forEach(i=>lines.push([csvEsc(i.name),csvEsc(i.status),csvEsc(i.type),i.target,i.identified,i.action||0,i.achieved,i.duration].join(',')));}else lines.push('None');lines.push('');
+  lines.push('WORKPLAN');const wpItems=wsWp(w.id);
+  if(wpItems.length){lines.push('Level,Initiative,Name,Owner,Status,Start,End,Impacted BUs,Dependency,Comments');wpItems.forEach(wp=>{const init=allInits.find(x=>x.id===wp.initId);const rolledStatus=wp.level==='Milestone'?milestoneRollupStatus(wp.id)||wp.status:wp.status;lines.push([csvEsc(wp.level),csvEsc(init?init.name:''),csvEsc(wp.name),csvEsc(wp.owner),csvEsc(rolledStatus),csvEsc(wp.start),csvEsc(wp.end),csvEsc((wp.bus||[]).join('; ')),csvEsc(wp.dep),csvEsc(wp.comments)].join(','));});}else lines.push('None');lines.push('');
+  lines.push('KPIs');const kpis=wsKpis(w.id);if(kpis.length){lines.push('KPI,Current,Target,Unit,Status');kpis.forEach(k=>lines.push([csvEsc(k.name),csvEsc(k.value),csvEsc(k.target),csvEsc(k.unit),csvEsc(k.status==='green'?'On Track':k.status==='red'?'Off Track':'At Risk')].join(',')));}else lines.push('None');lines.push('');
+  lines.push('GL RECONCILIATION');const allGlForWs=inits.flatMap(i=>initGl(i.id).map(g=>({...g,initName:i.name})));
+  if(allGlForWs.length){lines.push('Initiative,GL Account,Cost Center,Description,Baseline,Current,Variance');allGlForWs.forEach(g=>lines.push([csvEsc(g.initName),csvEsc(g.account),csvEsc(g.costCenter),csvEsc(g.desc),g.baseline,g.current,g.baseline-g.current].join(',')));}else lines.push('None');lines.push('');
+  lines.push('NOTES');
+  const notesList=Array.isArray(w.notes)?w.notes:[];
+  if(notesList.length){lines.push('Date,Note');notesList.forEach(n=>{const d=new Date(n.date);lines.push(csvEsc(d.toLocaleDateString('en-US'))+','+csvEsc(n.text));});}else lines.push('No notes');
+  dlCSV('project-hopper-'+w.name.replace(/[^a-zA-Z0-9]/g,'-').toLowerCase()+'.csv',lines.join('\n'));}
+
+// ═══ INIT ══════════════════════════════════════════════
+$('loading').style.display='none';
+renderApp();
+</script>
+</body>
+</html>
